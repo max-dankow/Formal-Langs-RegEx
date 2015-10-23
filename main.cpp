@@ -15,7 +15,6 @@ struct ExpressionInfo
     ExpressionInfo kleeneStar();
     std::vector<std::vector<bool>> canBeSubWord;
     std::vector<std::vector<bool>> canBeSubSuffix;
-    std::string expression;
 };
 
 std::ostream& operator << (std::ostream &output, const ExpressionInfo &info)
@@ -146,7 +145,7 @@ void readInput(std::istream &input, std::string &regularExpression, std::string 
     input >> regularExpression >> word;
 }
 
-bool runSolution(const std::string &regularExpression, const std::string &word)
+bool runSolution(const std::string &regularExpression, const std::string &word, size_t &maxSuffixLength)
 {
     std::stack<ExpressionInfo> parsingStack;
     for (size_t i = 0; i < regularExpression.length(); ++i)
@@ -201,7 +200,21 @@ bool runSolution(const std::string &regularExpression, const std::string &word)
         }
         std::cout << parsingStack.top();
     }
-    return parsingStack.size() == 1;
+    maxSuffixLength = 0;
+    if (parsingStack.size() == 1)
+    {
+        ExpressionInfo entireExpressionInfo = parsingStack.top();
+        size_t tableSize = entireExpressionInfo.canBeSubSuffix.size();
+        for (size_t i = 0; i < entireExpressionInfo.canBeSubSuffix.size(); ++i)
+        {
+            if (entireExpressionInfo.canBeSubSuffix[i][tableSize - 1])
+            {
+                maxSuffixLength = tableSize - i;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 int main() {
@@ -210,10 +223,12 @@ int main() {
     std::string word;
     readInput(inputFile, regularExpression, word);
     assert(checkWord(word));
-    std::cout << regularExpression << "    " << word << "\n";
-    if (runSolution(regularExpression, word))
+//    std::cout << regularExpression << "    " << word << "\n";
+    size_t answer = 0;
+    if (runSolution(regularExpression, word, answer))
     {
         std::cout << "All right. Expression (" << regularExpression << ") is correct.\n";
+        std::cout << "The longest suffix of '" << word << "', what is a suffix of a word from language, is " << answer << "\n";
     }
     else
     {
